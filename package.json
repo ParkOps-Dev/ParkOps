@@ -1,22 +1,75 @@
 {
   "name": "parkops",
   "version": "1.0.0",
+  "description": "Système de gestion de parc d'attractions en temps réel",
   "main": "main.js",
   "scripts": {
-    "dist": "electron-builder --win portable"
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "test": "jest",
+    "lint": "eslint .",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "park",
+    "management",
+    "attraction",
+    "real-time",
+    "electron"
+  ],
+  "author": "ParkOps-Dev & Maxlware",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^24.0.0",
+    "electron-builder": "^24.4.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "jest": "^29.6.1"
   },
   "dependencies": {
-    "electron-log": "^4.4.8"
-  },
-  "devDependencies": {
-    "electron": "^25.0.0",
-    "electron-builder": "^24.13.3"
+    "electron-updater": "^6.1.1",
+    "node-ipc": "^11.1.0",
+    "socket.io": "^4.7.1",
+    "sqlite3": "^5.1.6"
   },
   "build": {
-    "appId": "com.maxlware.parkops",
+    "appId": "com.parkops.app",
+    "productName": "ParkOps",
+    "copyright": "Copyright © 2023 ParkOps-Dev & Maxlware",
+    "directories": {
+      "output": "dist"
+    },
     "win": {
+      "target": "nsis",
       "icon": "build/icon.ico",
-      "artifactName": "ParkOps-Portable.exe"
+      "publisherName": "ParkOps-Dev & Maxlware"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities",
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "https://github.com/ParkOps-Dev",
+      "repo": "https://github.com/ParkOps-Dev/ParkOps"
     }
   }
 }
