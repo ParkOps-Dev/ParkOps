@@ -9,16 +9,22 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-const api = {
-  getManeges: () => ipcRenderer.invoke('get-maneges'),
-  updateManege: (manege) => ipcRenderer.invoke('update-manege', manege),
-  
-  saveInitialConfig: (config) => ipcRenderer.invoke('save-initial-config', config),
-  launchMainApp: () => ipcRenderer.invoke('launch-main-app'),
-  
-  on: (channel, callback) => {
-    ipcRenderer.on(channel, (event, ...args) => callback(...args));
-  }
-};
-
-contextBridge.exposeInMainWorld('electronAPI', api);
+contextBridge.exposeInMainWorld('electronAPI', {
+    performAction: (...args) => ipcRenderer.invoke('perform-action', ...args),
+    emergencyAction: (action) => ipcRenderer.invoke('emergency-action', action),
+    connectCamera: (ip) => ipcRenderer.invoke('connect-camera', ip),
+    updateAttractionStatus: (attraction, status) => 
+        ipcRenderer.invoke('update-attraction-status', attraction, status),
+    
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    downloadUpdate: () => ipcRenderer.invoke('download-update'),
+    
+    saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+    loadSettings: () => ipcRenderer.invoke('load-settings'),
+    
+    runDiagnostic: () => ipcRenderer.invoke('run-diagnostic'),
+    
+    // Pour la gestion des fichiers
+    saveBackup: () => ipcRenderer.invoke('save-backup'),
+    restoreBackup: (filePath) => ipcRenderer.invoke('restore-backup', filePath)
+});
