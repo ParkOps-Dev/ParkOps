@@ -1,0 +1,34 @@
+{
+  "firstLaunch": false,
+  "park": {
+    "name": "gerg",
+    "location": "regerg",
+    "timezone": "Europe/Paris"
+  },
+  "maneges": [
+    {
+      "id": 1752967328299,
+      "nom": "esfzsf",
+      "type": "adrenaline",
+      "en_circulation": false,
+      "capacite_max": 20,
+      "visiteurs": 0,
+      "temps_attente": 0,
+      "derniere_maintenance": "2025-07-19"
+    }
+  ],
+  "parametres": {
+    "alertes": {
+      "capacityThreshold": "90",
+      "waitThreshold": "30",
+      "emailNotifications": false,
+      "adminEmail": null
+    },
+    "materiel": {
+      "autoDetect": true,
+      "sensorType": "camera",
+      "port": "auto"
+    }
+  },
+  "historique": []
+}

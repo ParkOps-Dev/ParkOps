@@ -1,0 +1,1210 @@
+<!--
+=========================================================
+                        INDEX.HTML 
+=========================================================
+Ce script est le fichier principal du logiciel, c'est le
+menu principal des opérations.
+Une pull request est autorisé sur ce script.
+Si vous voulez plus d'informations, le script à une page
+spécialisé sur ça.
+-->
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkOps - Menu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #1a252f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+            color: var(--secondary);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--secondary);
+        }
+
+        .maneges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .manege-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .manege-card.critical {
+            border-left: 4px solid var(--danger);
+            animation: pulse 2s infinite;
+        }
+
+        .manege-card.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .manege-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .manege-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success);
+        }
+
+        .status-inactive {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+        }
+
+        .manege-info {
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .capacity-bar {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .capacity-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 4px;
+        }
+
+        .visitor-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .visitor-count {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .btn-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-add {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-remove {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-toggle {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chart-container {
+            height: 300px;
+        }
+
+        .alert-list {
+            list-style: none;
+        }
+
+        .alert-item {
+            padding: 12px;
+            border-left: 4px solid var(--danger);
+            background: rgba(231, 76, 60, 0.05);
+            margin-bottom: 10px;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9rem;
+        }
+
+        .alert-item.warning {
+            border-left-color: var(--warning);
+            background: rgba(243, 156, 18, 0.05);
+        }
+
+        .alert-item.info {
+            border-left-color: var(--secondary);
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .alert-time {
+            font-size: 0.8rem;
+            color: #777;
+            margin-top: 3px;
+        }
+
+        .history-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+
+        .history-tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .history-tab.active {
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .history-content {
+            display: none;
+        }
+
+        .history-content.active {
+            display: block;
+        }
+
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .maneges-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="window-controls">
+  <button id="minimize-btn">🗕</button>
+  <button id="maximize-btn">🗗</button>
+  <button id="close-btn">✕</button>
+</div>
+
+<script>
+  // Contrôles de fenêtre personnalisés
+  document.getElementById('minimize-btn').addEventListener('click', () => {
+    window.electronAPI.send('window-control', 'minimize');
+  });
+
+  document.getElementById('maximize-btn').addEventListener('click', () => {
+    window.electronAPI.send('window-control', 'maximize');
+  });
+
+  document.getElementById('close-btn').addEventListener('click', () => {
+    window.electronAPI.send('window-control', 'close');
+  });
+</script>
+
+<style>
+  .window-controls {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+  }
+  
+  .window-controls button {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .window-controls button:hover {
+    background: rgba(255,255,255,0.2);
+  }
+  
+  #close-btn:hover {
+    background: #e81123;
+  }
+</style>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-ferris-wheel"></i>
+                <h1>Supervision Manèges</h1>
+            </div>
+            <div class="controls">
+                <button class="btn btn-primary" id="add-manege-btn">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+                <button class="btn btn-secondary" id="export-btn">
+                    <i class="fas fa-file-export"></i> Exporter
+                </button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div>
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-compass"></i> Manèges</h2>
+                    <div class="maneges-grid" id="maneges-container">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="history-tabs">
+                        <div class="history-tab active" data-period="today">Aujourd'hui</div>
+                        <div class="history-tab" data-period="week">7 jours</div>
+                        <div class="history-tab" data-period="month">30 jours</div>
+                    </div>
+                    <div class="history-content active" id="history-today">
+                        <canvas id="history-chart-today"></canvas>
+                    </div>
+                    <div class="history-content" id="history-week">
+                        <canvas id="history-chart-week"></canvas>
+                    </div>
+                    <div class="history-content" id="history-month">
+                        <canvas id="history-chart-month"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-chart-line"></i> Statistiques</h2>
+                    <div class="chart-container">
+                        <canvas id="visitors-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-exclamation-triangle"></i> Alertes</h2>
+                    <ul class="alert-list" id="alert-list">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="add-manege-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un Manège</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="manege-name">Nom du Manège</label>
+                    <input type="text" id="manege-name" placeholder="Ex: Grande Roue">
+                </div>
+                <div class="form-group">
+                    <label for="manege-type">Type</label>
+                    <select id="manege-type">
+                        <option value="adrenaline">Adrénaline</option>
+                        <option value="family">Famille</option>
+                        <option value="kids">Enfants</option>
+                        <option value="water">Aquatique</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="manege-capacity">Capacité Maximale</label>
+                    <input type="number" id="manege-capacity" value="30">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-btn">Annuler</button>
+                <button class="btn btn-primary" id="save-manege-btn">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="export-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Exporter les Données</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Sélectionnez le format d'export :</p>
+                <div class="export-options">
+                    <button class="btn btn-primary" id="export-csv">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </button>
+                    <button class="btn btn-success" id="export-json">
+                        <i class="fas fa-file-code"></i> JSON
+                    </button>
+                    <button class="btn btn-secondary" id="export-print">
+                        <i class="fas fa-print"></i> Imprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let maneges = [
+            {
+                id: 1,
+                name: "Grande Roue",
+                type: "family",
+                status: "active",
+                capacity: 40,
+                currentVisitors: 35,
+                waitTime: 15,
+                lastMaintenance: "2023-07-10",
+                history: generateHistoryData(40)
+            },
+            {
+                id: 2,
+                name: "Montagnes Russes",
+                type: "adrenaline",
+                status: "active",
+                capacity: 24,
+                currentVisitors: 24,
+                waitTime: 30,
+                lastMaintenance: "2023-07-15",
+                history: generateHistoryData(24)
+            },
+            {
+                id: 3,
+                name: "Tour de Chute",
+                type: "adrenaline",
+                status: "inactive",
+                capacity: 30,
+                currentVisitors: 0,
+                waitTime: 0,
+                lastMaintenance: "2023-06-28",
+                history: generateHistoryData(30)
+            },
+            {
+                id: 4,
+                name: "Carrousel",
+                type: "kids",
+                status: "active",
+                capacity: 20,
+                currentVisitors: 18,
+                waitTime: 8,
+                lastMaintenance: "2023-07-05",
+                history: generateHistoryData(20)
+            }
+        ];
+
+        let alerts = [
+            {
+                id: 1,
+                type: "danger",
+                message: "Capacité critique sur Montagnes Russes (100%)",
+                time: "10:30"
+            },
+            {
+                id: 2,
+                type: "warning",
+                message: "Maintenance prévue pour Grande Roue demain",
+                time: "09:45"
+            },
+            {
+                id: 3,
+                type: "info",
+                message: "Carrousel atteint 90% de capacité",
+                time: "09:15"
+            }
+        ];
+
+        function generateHistoryData(capacity) {
+            const today = [];
+            const week = [];
+            const month = [];
+            
+            for (let i = 0; i < 24; i++) {
+                today.push({
+                    time: `${i}h`,
+                    visitors: Math.floor(Math.random() * capacity * 0.8) + capacity * 0.2
+                });
+            }
+            
+            const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+            for (let i = 0; i < 7; i++) {
+                week.push({
+                    day: days[i],
+                    visitors: Math.floor(Math.random() * capacity * 0.7) + capacity * 0.3,
+                    capacity: capacity
+                });
+            }
+            
+            for (let i = 1; i <= 30; i++) {
+                month.push({
+                    day: i,
+                    visitors: Math.floor(Math.random() * capacity * 0.6) + capacity * 0.4,
+                    capacity: capacity
+                });
+            }
+            
+            return { today, week, month };
+        }
+
+        let visitorsChart;
+        let historyChartToday;
+        let historyChartWeek;
+        let historyChartMonth;
+
+        function renderManeges() {
+            const container = document.getElementById('maneges-container');
+            container.innerHTML = '';
+            
+            maneges.forEach(manege => {
+                const percentage = (manege.currentVisitors / manege.capacity) * 100;
+                let cardClass = 'manege-card';
+                
+                if (manege.status === 'active' && percentage >= 90) {
+                    cardClass += ' critical';
+                    addAlertIfNotExists({
+                        type: 'danger',
+                        message: `Capacité critique sur ${manege.name} (${Math.round(percentage)}%)`,
+                        time: getCurrentTime()
+                    });
+                } else if (manege.status === 'active' && percentage >= 80) {
+                    cardClass += ' warning';
+                    addAlertIfNotExists({
+                        type: 'warning',
+                        message: `Capacité élevée sur ${manege.name} (${Math.round(percentage)}%)`,
+                        time: getCurrentTime()
+                    });
+                }
+                
+                const card = document.createElement('div');
+                card.className = cardClass;
+                card.innerHTML = `
+                    <div class="manege-header">
+                        <div class="manege-name">${manege.name}</div>
+                        <div class="status ${manege.status === 'active' ? 'status-active' : 'status-inactive'}">
+                            ${manege.status === 'active' ? 'ACTIF' : 'INACTIF'}
+                        </div>
+                    </div>
+                    <div class="manege-info">
+                        <div class="info-item">
+                            <span>Type:</span>
+                            <span>${getTypeName(manege.type)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span>Capacité:</span>
+                            <span>${manege.currentVisitors}/${manege.capacity}</span>
+                        </div>
+                        <div class="capacity-bar">
+                            <div class="capacity-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="info-item">
+                            <span>Temps d'attente:</span>
+                            <span>${manege.waitTime} min</span>
+                        </div>
+                    </div>
+                    <div class="visitor-controls">
+                        <div class="visitor-count">${manege.currentVisitors}</div>
+                        <div class="controls">
+                            <div class="btn-icon btn-remove" data-id="${manege.id}">
+                                <i class="fas fa-minus"></i>
+                            </div>
+                            <div class="btn-icon btn-add" data-id="${manege.id}">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="btn-icon btn-toggle" data-id="${manege.id}">
+                                <i class="fas fa-power-off"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            document.querySelectorAll('.btn-add').forEach(btn => {
+                btn.addEventListener('click', () => addVisitor(btn.dataset.id));
+            });
+            
+            document.querySelectorAll('.btn-remove').forEach(btn => {
+                btn.addEventListener('click', () => removeVisitor(btn.dataset.id));
+            });
+            
+            document.querySelectorAll('.btn-toggle').forEach(btn => {
+                btn.addEventListener('click', () => toggleStatus(btn.dataset.id));
+            });
+        }
+
+        function renderAlerts() {
+            const alertList = document.getElementById('alert-list');
+            alertList.innerHTML = '';
+            
+            alerts.forEach(alert => {
+                const item = document.createElement('li');
+                item.className = `alert-item ${alert.type}`;
+                item.innerHTML = `
+                    <div>${alert.message}</div>
+                    <div class="alert-time">${alert.time}</div>
+                `;
+                alertList.appendChild(item);
+            });
+        }
+
+        function addAlertIfNotExists(newAlert) {
+            const exists = alerts.some(alert => 
+                alert.message === newAlert.message && 
+                alert.time === newAlert.time
+            );
+            
+            if (!exists) {
+                alerts.unshift(newAlert);
+                if (alerts.length > 10) alerts.pop();
+                renderAlerts();
+            }
+        }
+
+        function initCharts() {
+            const ctx = document.getElementById('visitors-chart').getContext('2d');
+            visitorsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: maneges.map(m => m.name),
+                    datasets: [
+                        {
+                            label: 'Visiteurs Actuels',
+                            data: maneges.map(m => m.currentVisitors),
+                            backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                            borderColor: 'rgba(39, 174, 96, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Capacité Maximale',
+                            data: maneges.map(m => m.capacity),
+                            backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            initHistoryCharts();
+        }
+
+        function initHistoryCharts() {
+            const ctxToday = document.getElementById('history-chart-today').getContext('2d');
+            historyChartToday = new Chart(ctxToday, {
+                type: 'line',
+                data: {
+                    labels: maneges[0].history.today.map(h => h.time),
+                    datasets: maneges.map(manege => ({
+                        label: manege.name,
+                        data: manege.history.today.map(h => h.visitors),
+                        borderColor: getRandomColor(),
+                        borderWidth: 2,
+                        fill: false
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Fréquentation par heure'
+                        }
+                    }
+                }
+            });
+
+            const ctxWeek = document.getElementById('history-chart-week').getContext('2d');
+            historyChartWeek = new Chart(ctxWeek, {
+                type: 'bar',
+                data: {
+                    labels: maneges[0].history.week.map(h => h.day),
+                    datasets: maneges.map(manege => ({
+                        label: manege.name,
+                        data: manege.history.week.map(h => h.visitors),
+                        backgroundColor: getRandomColor(0.7),
+                        borderColor: getRandomColor(),
+                        borderWidth: 1
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Fréquentation sur 7 jours'
+                        }
+                    }
+                }
+            });
+
+            const ctxMonth = document.getElementById('history-chart-month').getContext('2d');
+            historyChartMonth = new Chart(ctxMonth, {
+                type: 'line',
+                data: {
+                    labels: maneges[0].history.month.map(h => h.day),
+                    datasets: maneges.map(manege => ({
+                        label: manege.name,
+                        data: manege.history.month.map(h => h.visitors),
+                        borderColor: getRandomColor(),
+                        borderWidth: 2,
+                        fill: false
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Fréquentation sur 30 jours'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            visitorsChart.data.datasets[0].data = maneges.map(m => m.currentVisitors);
+            visitorsChart.update();
+        }
+
+        function addVisitor(id) {
+            const manege = maneges.find(m => m.id == id);
+            if (manege && manege.status === 'active' && manege.currentVisitors < manege.capacity) {
+                manege.currentVisitors++;
+                manege.waitTime = Math.min(manege.waitTime + 2, 60);
+                
+                const now = new Date();
+                const hour = now.getHours();
+                manege.history.today[hour].visitors = Math.min(
+                    manege.history.today[hour].visitors + 1, 
+                    manege.capacity
+                );
+                
+                renderManeges();
+                updateCharts();
+                
+                checkForAlerts(manege);
+            }
+        }
+
+        function removeVisitor(id) {
+            const manege = maneges.find(m => m.id == id);
+            if (manege && manege.currentVisitors > 0) {
+                manege.currentVisitors--;
+                manege.waitTime = Math.max(manege.waitTime - 1, 0);
+                
+                const now = new Date();
+                const hour = now.getHours();
+                manege.history.today[hour].visitors = Math.max(
+                    manege.history.today[hour].visitors - 1, 
+                    0
+                );
+                
+                renderManeges();
+                updateCharts();
+            }
+        }
+
+        function toggleStatus(id) {
+            const manege = maneges.find(m => m.id == id);
+            if (manege) {
+                manege.status = manege.status === 'active' ? 'inactive' : 'active';
+                if (manege.status === 'inactive') {
+                    manege.currentVisitors = 0;
+                    manege.waitTime = 0;
+                }
+                
+                renderManeges();
+                updateCharts();
+                
+                const action = manege.status === 'active' ? 'activé' : 'désactivé';
+                addAlertIfNotExists({
+                    type: manege.status === 'active' ? 'success' : 'warning',
+                    message: `Manège ${manege.name} ${action}`,
+                    time: getCurrentTime()
+                });
+            }
+        }
+
+        function checkForAlerts(manege) {
+            const percentage = (manege.currentVisitors / manege.capacity) * 100;
+            
+            if (percentage >= 90) {
+                addAlertIfNotExists({
+                    type: 'danger',
+                    message: `Capacité critique sur ${manege.name} (${Math.round(percentage)}%)`,
+                    time: getCurrentTime()
+                });
+            } else if (percentage >= 80) {
+                addAlertIfNotExists({
+                    type: 'warning',
+                    message: `Capacité élevée sur ${manege.name} (${Math.round(percentage)}%)`,
+                    time: getCurrentTime()
+                });
+            }
+        }
+
+        function getTypeName(type) {
+            const types = {
+                'adrenaline': 'Adrénaline',
+                'family': 'Famille',
+                'kids': 'Enfants',
+                'water': 'Aquatique'
+            };
+            return types[type] || type;
+        }
+
+        function getCurrentTime() {
+            const now = new Date();
+            return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        function getRandomColor(alpha = 1) {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function exportToCSV() {
+            const headers = ['ID', 'Nom', 'Type', 'Statut', 'Capacité', 'Visiteurs', 'Temps attente', 'Dernière maintenance'];
+            const data = maneges.map(m => [
+                m.id,
+                m.name,
+                getTypeName(m.type),
+                m.status === 'active' ? 'Actif' : 'Inactif',
+                m.capacity,
+                m.currentVisitors,
+                m.waitTime,
+                m.lastMaintenance
+            ]);
+            
+            const csv = Papa.unparse({
+                fields: headers,
+                data: data
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'maneges_export.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportToJSON() {
+            const data = maneges.map(m => ({
+                id: m.id,
+                nom: m.name,
+                type: getTypeName(m.type),
+                statut: m.status === 'active' ? 'Actif' : 'Inactif',
+                capacité: m.capacity,
+                visiteurs: m.currentVisitors,
+                temps_attente: m.waitTime,
+                dernière_maintenance: m.lastMaintenance
+            }));
+            
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'maneges_export.json');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printData() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Export Manèges</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            h1 { color: #2c3e50; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Supervision des Manèges</h1>
+                        <p>Export du ${new Date().toLocaleDateString()}</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Type</th>
+                                    <th>Statut</th>
+                                    <th>Visiteurs</th>
+                                    <th>Capacité</th>
+                                    <th>Temps attente</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${maneges.map(m => `
+                                    <tr>
+                                        <td>${m.name}</td>
+                                        <td>${getTypeName(m.type)}</td>
+                                        <td>${m.status === 'active' ? 'Actif' : 'Inactif'}</td>
+                                        <td>${m.currentVisitors}</td>
+                                        <td>${m.capacity}</td>
+                                        <td>${m.waitTime} min</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function initApp() {
+            renderManeges();
+            renderAlerts();
+            initCharts();
+            
+            document.getElementById('add-manege-btn').addEventListener('click', () => {
+                document.getElementById('add-manege-modal').classList.add('show');
+            });
+            
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.classList.remove('show');
+                    });
+                });
+            });
+            
+            document.getElementById('cancel-btn').addEventListener('click', () => {
+                document.getElementById('add-manege-modal').classList.remove('show');
+            });
+            
+            document.getElementById('save-manege-btn').addEventListener('click', () => {
+                const name = document.getElementById('manege-name').value;
+                const type = document.getElementById('manege-type').value;
+                const capacity = parseInt(document.getElementById('manege-capacity').value);
+                
+                if (name && capacity > 0) {
+                    const newManege = {
+                        id: maneges.length + 1,
+                        name,
+                        type,
+                        status: "active",
+                        capacity,
+                        currentVisitors: 0,
+                        waitTime: 0,
+                        lastMaintenance: new Date().toISOString().split('T')[0],
+                        history: generateHistoryData(capacity)
+                    };
+                    
+                    maneges.push(newManege);
+                    renderManeges();
+                    updateCharts();
+                    
+                    addAlertIfNotExists({
+                        type: 'info',
+                        message: `Nouveau manège ajouté: ${name}`,
+                        time: getCurrentTime()
+                    });
+                    
+                    document.getElementById('add-manege-modal').classList.remove('show');
+                    document.getElementById('manege-name').value = '';
+                    document.getElementById('manege-capacity').value = '30';
+                }
+            });
+            
+            document.getElementById('export-btn').addEventListener('click', () => {
+                document.getElementById('export-modal').classList.add('show');
+            });
+            
+            document.getElementById('export-csv').addEventListener('click', exportToCSV);
+            document.getElementById('export-json').addEventListener('click', exportToJSON);
+            document.getElementById('export-print').addEventListener('click', printData);
+            
+            document.querySelectorAll('.history-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.history-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.history-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(`history-${tab.dataset.period}`).classList.add('active');
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
