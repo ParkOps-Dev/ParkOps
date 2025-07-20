@@ -7,111 +7,102 @@
 // pull request SUR CE SCRIPT.
 // ===================================
 
-console.log("[PARKOPS] Loading...")
-console.log("[DATA] Loading...")
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+// ===================================
+//              BIENVENUE
+// Bienvenue sur le script de
+// démarrage du logiciel.
+// Le script sera changé TRES RAREMENT
+// et sera imposible à demander une
+// pull request SUR CE SCRIPT.
+// ===================================
+
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const fs = require('fs');
-console.log("[DATA] Loaded!")
 
-const DATA_PATH = path.join(__dirname, 'data.json');
-
-console.log("[PRELOAD] Loading...")
-const WINDOW_CONFIG = {
-  width: 1200,
-  height: 800,
-  webPreferences: {
-    preload: path.join(__dirname, 'preload.js'),
-    contextIsolation: true,
-    nodeIntegration: false
-  },
-  titleBarStyle: 'hidden',
-  titleBarOverlay: {
-    color: '#2c3e50',
-    symbolColor: '#ffffff',
-    height: 30
-  },
-  frame: true
-};
-console.log("[PRELOAD] Loaded!")
-
-function removeMenu() {
-  Menu.setApplicationMenu(null);
-}
+let mainWindow;
+let splashWindow;
 
 function createWindow() {
-  removeMenu();
-
-  const win = new BrowserWindow(WINDOW_CONFIG);
-
-  ipcMain.on('window-control', (event, action) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (!window) return;
-
-    switch (action) {
-      case 'minimize':
-        window.minimize();
-        break;
-      case 'maximize':
-        if (window.isMaximized()) {
-          window.unmaximize();
-        } else {
-          window.maximize();
+    // Créer la fenêtre d'écran de chargement
+    splashWindow = new BrowserWindow({
+        width: 400,
+        height: 300,
+        frame: false,
+        alwaysOnTop: true,
+        transparent: false,
+        webPreferences: {
+            nodeIntegration: true
         }
-        break;
-      case 'close':
-        window.close();
-        break;
-    }
-  });
+    });
+    splashWindow.loadFile('splash.html');
 
-  const isFirstLaunch = !fs.existsSync(DATA_PATH) || JSON.parse(fs.readFileSync(DATA_PATH)).firstLaunch;
-  win.loadFile(isFirstLaunch ? 'welcome.html' : 'index.html');
+    // Créer la fenêtre principale, mais ne pas l'afficher encore
+    mainWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        show: false,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: false,
+            contextIsolation: true
+        }
+    });
+    mainWindow.loadFile('index.html');
 
-  return win;
+    // Quand la fenêtre principale est prête, fermer le splash et afficher
+    mainWindow.webContents.on('did-finish-load', () => {
+        setTimeout(() => {
+            splashWindow.close();
+            mainWindow.show();
+            mainWindow.focus();
+        }, 2000); // Délai artificiel pour voir le splash
+    });
 }
 
 app.whenReady().then(() => {
-  if (!fs.existsSync(DATA_PATH)) {
-    fs.writeFileSync(DATA_PATH, JSON.stringify({ maneges: [], historique: [] }, null, 2));
-  }
+    createWindow();
 
-  createWindow();
-  console.log("[PARKOPS] Loaded!")
-  console.log("=================")
-  console.log("Parkops - 1.0.0")
-  console.log("By Maxlware")
-  console.warn("This is a BETA TEST!")
-  console.log("=================")
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+    app.on('activate', function () {
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+app.on('window-all-closed', function () {
+    if (process.platform !== 'darwin') app.quit();
 });
 
-console.log("[MSG] Loading...")
-ipcMain.handle('get-maneges', () => {
-  try {
-    return JSON.parse(fs.readFileSync(DATA_PATH));
-  } catch {
-    return { maneges: [] };
-  }
+// Communication entre les processus
+ipcMain.handle('perform-action', (event, ...args) => {
+    // Exemple: Gérer des actions depuis le rendu
+    console.log('Action demandée depuis le rendu:', args);
+    return 'Action effectuée';
 });
-console.log("[MSG] Loaded!")
 
-console.log("[UPT-MSG] Loading...")
-ipcMain.handle('update-manege', (_, manege) => {
-  const data = JSON.parse(fs.readFileSync(DATA_PATH));
-  const index = data.maneges.findIndex(m => m.id === manege.id);
-  if (index !== -1) {
-    data.maneges[index] = manege;
-    fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
-    return true;
-  }
-  return false;
+ipcMain.handle('emergency-action', (event, action) => {
+    // Logique pour les actions d'urgence
+    console.log(`Action d'urgence déclenchée: ${action}`);
+    return { success: true, message: `Action ${action} exécutée` };
 });
-console.log("[UPT-MSG] Loaded!")
+
+ipcMain.handle('connect-camera', (event, ip) => {
+    // Simuler la connexion à une caméra
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve({ 
+                success: true, 
+                ip: ip,
+                message: `Caméra connectée à ${ip}` 
+            });
+        }, 1500);
+    });
+});
+
+ipcMain.handle('update-attraction-status', (event, attraction, status) => {
+    // Logique pour mettre à jour le statut d'une attraction
+    return { 
+        success: true, 
+        attraction: attraction, 
+        newStatus: status,
+        timestamp: new Date().toISOString() 
+    };
+});
